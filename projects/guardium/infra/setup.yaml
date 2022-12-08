@@ -1,0 +1,40 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: guardium-project
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.ibm.com/Prajyot-Narulkar/aws-tf-ucp-resources
+  ref:
+    branch: main
+  secretRef:
+    name: basic-access-auth
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: guardium 
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha1
+kind: Terraform
+metadata:
+  name: guardium-terraform
+  namespace: guardium
+spec:
+  path: ./terraform
+  workspace: dev
+  backendConfig:
+    secretSuffix: module-guardium
+  approvePlan: auto
+  interval: 1m
+  varsFrom:
+  - kind: Secret
+    name: aws-credentials
+  sourceRef:
+    kind: GitRepository
+    name: guardium-project
+    namespace: flux-system
+  writeOutputsToSecret:
+    name: guardium-terraform-output

@@ -1,0 +1,33 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: GitRepository
+metadata:
+  name: isv-project
+spec:
+  interval: 1m
+  url: https://github.ibm.com/Prajyot-Narulkar/aws-tf-ucp-resources
+  ref:
+    branch: main
+  secretRef:
+    name: basic-access-auth
+---
+apiVersion: infra.contrib.fluxcd.io/v1alpha1
+kind: Terraform
+metadata:
+  name: isv-terraform
+spec:
+  path: ./terraform
+  workspace: dev
+  backendConfig:
+    secretSuffix: module-isv
+  approvePlan: auto
+  interval: 1m
+  varsFrom:
+  - kind: Secret
+    name: aws-credentials
+  sourceRef:
+    kind: GitRepository
+    name: isv-project
+    # namespace: flux-system
+  writeOutputsToSecret:
+    name: terraform-modules-output
